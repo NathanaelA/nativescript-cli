@@ -102,6 +102,9 @@ function createTestInjector() {
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => {}
 	});
+	testInjector.register("broccoliBuilder", {
+		prepareNodeModulesFolder: () => {}
+	});
 
 	return testInjector;
 }

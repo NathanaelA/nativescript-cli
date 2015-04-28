@@ -10,6 +10,8 @@ import options = require("./../common/options");
 import semver = require("semver");
 
 export class PlatformService implements IPlatformService {
+	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
+	
 	constructor(private $devicesServices: Mobile.IDevicesServices,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -19,7 +21,8 @@ export class PlatformService implements IPlatformService {
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
-		private $commandsService: ICommandsService) { }
+		private $commandsService: ICommandsService,
+		private $broccoliBuilder: IBroccoliBuilder) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -137,7 +140,7 @@ export class PlatformService implements IPlatformService {
 
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
+		 	platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 
@@ -168,14 +171,16 @@ export class PlatformService implements IPlatformService {
 					files.push(path.join(platformData.appDestinationDirectoryPath, d));
 				}
 			});
-
 			this.processPlatformSpecificFiles(platform, files).wait();
+
+			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
+			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir).wait();
 
 			this.$logger.out("Project successfully prepared");
 
 		}).future<void>()();
 	}
-
+	
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
